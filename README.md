@@ -89,6 +89,17 @@ pnpm tauri build
 
 The built application will be in `src-tauri/target/release/bundle/`.
 
+### Linux Rendering
+
+On Linux, the dashboard defaults to software compositing and shared-memory
+rendering to reduce idle GPU memory usage. This can increase CPU work during
+scrolling. Existing WebKit rendering overrides are preserved. To use hardware
+compositing instead:
+
+```bash
+WEBKIT_DISABLE_COMPOSITING_MODE=0 ./Codex-Switcher_*.AppImage
+```
+
 ### Run the Dashboard in a Browser
 
 You can also serve the built dashboard over HTTP instead of opening the Tauri shell.
