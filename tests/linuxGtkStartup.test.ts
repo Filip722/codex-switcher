@@ -13,7 +13,7 @@ pub fn run() {
         "GTK3_MODULES",
         "GDK_BACKEND",
         "WEBKIT_DISABLE_COMPOSITING_MODE",
-        "WEBKIT_FORCE_COMPOSITING_MODE",
+        "WEBKIT_SKIA_ENABLE_CPU_RENDERING",
         "WEBKIT_DISABLE_DMABUF_RENDERER",
     ] {
         match std::env::var_os(name) {
@@ -50,40 +50,19 @@ test("Linux entry point applies GTK and rendering defaults before starting Tauri
     gtk3?: string;
     expectedModules?: string;
     expectedGtk3?: string;
-    disableCompositing?: string;
-    forceCompositing?: string;
-    expectedDisableCompositing?: string;
-    disableDmabuf?: string;
-    expectedDisableDmabuf?: string;
+    cpuRendering?: string;
+    expectedCpuRendering?: string;
   }[] = [
     { name: "leaves unset GTK modules unset" },
     {
-      name: "preserves an explicit hardware compositing override",
-      disableCompositing: "0",
-      expectedDisableCompositing: "0",
-      expectedDisableDmabuf: "<unset>",
+      name: "preserves an explicit GPU painting override",
+      cpuRendering: "0",
+      expectedCpuRendering: "0",
     },
     {
-      name: "preserves an explicitly empty compositing override",
-      disableCompositing: "",
-      expectedDisableCompositing: "",
-      expectedDisableDmabuf: "<unset>",
-    },
-    {
-      name: "does not override forced hardware compositing",
-      forceCompositing: "1",
-      expectedDisableCompositing: "<unset>",
-      expectedDisableDmabuf: "<unset>",
-    },
-    {
-      name: "preserves an explicit DMA-BUF renderer override",
-      disableDmabuf: "0",
-      expectedDisableDmabuf: "0",
-    },
-    {
-      name: "preserves an explicitly empty DMA-BUF override",
-      disableDmabuf: "",
-      expectedDisableDmabuf: "",
+      name: "preserves an explicitly empty painting override",
+      cpuRendering: "",
+      expectedCpuRendering: "",
     },
     { name: "preserves explicitly empty values", modules: "", gtk3: "", expectedModules: "", expectedGtk3: "" },
     {
@@ -124,21 +103,18 @@ test("Linux entry point applies GTK and rendering defaults before starting Tauri
 
   for (const {
     name, modules, gtk3, expectedModules, expectedGtk3,
-    disableCompositing, forceCompositing, expectedDisableCompositing = "1",
-    disableDmabuf, expectedDisableDmabuf = "1",
+    cpuRendering, expectedCpuRendering = "1",
   } of cases) {
     await t.test(name, () => {
       const env: Record<string, string | undefined> = { ...process.env, GDK_BACKEND: "wayland" };
       delete env.GTK_MODULES;
       delete env.GTK3_MODULES;
       delete env.WEBKIT_DISABLE_COMPOSITING_MODE;
-      delete env.WEBKIT_FORCE_COMPOSITING_MODE;
+      delete env.WEBKIT_SKIA_ENABLE_CPU_RENDERING;
       delete env.WEBKIT_DISABLE_DMABUF_RENDERER;
       if (modules !== undefined) env.GTK_MODULES = modules;
       if (gtk3 !== undefined) env.GTK3_MODULES = gtk3;
-      if (disableCompositing !== undefined) env.WEBKIT_DISABLE_COMPOSITING_MODE = disableCompositing;
-      if (forceCompositing !== undefined) env.WEBKIT_FORCE_COMPOSITING_MODE = forceCompositing;
-      if (disableDmabuf !== undefined) env.WEBKIT_DISABLE_DMABUF_RENDERER = disableDmabuf;
+      if (cpuRendering !== undefined) env.WEBKIT_SKIA_ENABLE_CPU_RENDERING = cpuRendering;
       const result = spawnSync(executable, [], { env, encoding: "utf8" });
       assert.ifError(result.error);
       assert.equal(result.status, 0, result.stderr);
@@ -146,9 +122,9 @@ test("Linux entry point applies GTK and rendering defaults before starting Tauri
         `GTK_MODULES=${expectedModules ?? "<unset>"}`,
         `GTK3_MODULES=${expectedGtk3 ?? "<unset>"}`,
         "GDK_BACKEND=wayland",
-        `WEBKIT_DISABLE_COMPOSITING_MODE=${expectedDisableCompositing}`,
-        `WEBKIT_FORCE_COMPOSITING_MODE=${forceCompositing ?? "<unset>"}`,
-        `WEBKIT_DISABLE_DMABUF_RENDERER=${expectedDisableDmabuf}`,
+        "WEBKIT_DISABLE_COMPOSITING_MODE=<unset>",
+        `WEBKIT_SKIA_ENABLE_CPU_RENDERING=${expectedCpuRendering}`,
+        "WEBKIT_DISABLE_DMABUF_RENDERER=<unset>",
         "",
       ].join("\n"));
     });

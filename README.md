@@ -91,13 +91,13 @@ The built application will be in `src-tauri/target/release/bundle/`.
 
 ### Linux Rendering
 
-On Linux, the dashboard defaults to software compositing and shared-memory
-rendering to reduce idle GPU memory usage. This can increase CPU work during
-scrolling. Existing WebKit rendering overrides are preserved. To use hardware
-compositing instead:
+On Linux, the dashboard defaults to CPU tile painting to reduce Skia's GPU
+memory usage while keeping GPU compositing and asynchronous scrolling enabled.
+Savings depend on the WebKit version. Explicit WebKit rendering overrides are
+preserved. To use GPU tile painting instead:
 
 ```bash
-WEBKIT_DISABLE_COMPOSITING_MODE=0 ./Codex-Switcher_*.AppImage
+WEBKIT_SKIA_ENABLE_CPU_RENDERING=0 ./Codex-Switcher_*.AppImage
 ```
 
 ### Run the Dashboard in a Browser
